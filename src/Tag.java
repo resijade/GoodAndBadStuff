@@ -1,0 +1,3 @@
+public enum Tag {
+    FIGHT_SONG, PREGAME, DROP_IN, VOCALS, MASHUP, AAMB
+}
