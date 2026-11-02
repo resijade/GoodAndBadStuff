@@ -1,6 +1,7 @@
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Song {
+public class Song implements Serializable {
     private String name;
     private String arranger;
     private Elo elo;

@@ -8,7 +8,7 @@ import java.util.Queue;
 public class Server implements Runnable {
     private static ArrayList<Song> songs = new ArrayList<Song>();
     protected static boolean changesMade = false;
-    protected static final String DATA_PATH = "../data/songs.csv";
+    protected static final String DATA_PATH = "./data/gabsData.csv";
     protected static boolean autosave = true;
     private static final int PORT = 1999; // When Purdue won the natty. #TakeMeBack
     private static Queue<Song[]> queue = new LinkedList<Song[]>();
@@ -26,28 +26,31 @@ public class Server implements Runnable {
                     break;
                 }
                 String[] split = line.split(",");
-                if (split[1].equals("Title")) {
+                if (split[0].equals("Title")) {
                     continue;
                 }
                 String name = split[0];
                 String arranger = split[1];
                 int elo = Integer.parseInt(split[3]);
-                String[] readTags = split[2].split("|");
+                String[] readTags = split[2].split("\\|");
                 ArrayList<Tag> tags = new ArrayList<>();
-                for (int i = 0; i < readTags.length; i++) {
+                for (int i = 0; i < tags.size(); i++) {
                     try {
                         tags.add(Tag.valueOf(readTags[i]));
                     } catch (IllegalArgumentException e) {
                         System.err.println("Invalid Tag for " + name);
+                        e.printStackTrace();
                     }
                 }
                 songs.add(new Song(name, arranger, elo, tags));
             } while (true);
         } catch (Exception e) {
             System.err.println("Error reading csv:\n" + e.getMessage());
+            e.printStackTrace();
         }
     }
     public static void main(String[] args) {
+        IO.println(System.getProperty("user.dir"));
         startup();
         Autosave a = new Autosave();
         a.start();

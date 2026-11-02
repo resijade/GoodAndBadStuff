@@ -1,4 +1,6 @@
-public class Elo {
+import java.io.Serializable;
+
+public class Elo implements Serializable {
     private int score;
     private static final int K_FACTOR = 32;
     private static final int SCALE_FACTOR = 400;
