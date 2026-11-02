@@ -1,12 +1,22 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
 
-public class Server {
+public class Server implements Runnable {
     private static ArrayList<Song> songs = new ArrayList<Song>();
     protected static boolean changesMade = false;
     protected static final String DATA_PATH = "../data/songs.csv";
     protected static boolean autosave = true;
+    private static final int PORT = 1999; // When Purdue won the natty. #TakeMeBack
+    private static Queue<Song[]> queue = new LinkedList<Song[]>();
+    private Socket socket;
+
+    public Server(Socket socket) {
+        this.socket = socket;
+    }
 
     public static void startup() {
         try (BufferedReader br = new BufferedReader(new FileReader(DATA_PATH))) {
@@ -36,9 +46,38 @@ public class Server {
         } catch (Exception e) {
             System.err.println("Error reading csv:\n" + e.getMessage());
         }
-
+    }
+    public static void main(String[] args) {
+        startup();
+        Autosave a = new Autosave();
+        a.start();
+        try {
+            ServerSocket ss = new ServerSocket(PORT);
+            while (true) {
+                Socket socket = ss.accept();
+                Server s = new Server(socket);
+                Thread thread = new Thread(s);
+                thread.start();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
+    @Override
+    public void run() {
+        try (ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+             ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream())) {
+            int songOne = (int) (Math.random() * songs.size());
+            int songTwo = (int) (Math.random() * songs.size());
+            while (songOne == songTwo) {
+                songTwo = (int) (Math.random() * songs.size());
+            }
+            oos.writeObject(new Song[]{songs.get(songOne), songs.get(songTwo)});
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
 
 
