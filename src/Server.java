@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class Server {
     private static ArrayList<Song> songs = new ArrayList<Song>();
-    private static boolean changesMade = false;
+    protected static boolean changesMade = false;
     protected static final String DATA_PATH = "../data/songs.csv";
     protected static boolean autosave = true;
 
