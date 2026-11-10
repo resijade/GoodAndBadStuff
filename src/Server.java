@@ -1,17 +1,19 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 
 public class Server implements Runnable {
-    private static ArrayList<Song> songs = new ArrayList<Song>();
+    static ArrayList<Song> songs = new ArrayList<Song>();
     protected static boolean changesMade = false;
     protected static final String DATA_PATH = "./data/gabsData.csv";
     protected static boolean autosave = true;
     private static final int PORT = 1999; // When Purdue won the natty. #TakeMeBack
     private static Queue<Song[]> queue = new LinkedList<Song[]>();
+    static Object[] locks;
     private Socket socket;
 
     public Server(Socket socket) {
@@ -44,13 +46,16 @@ public class Server implements Runnable {
                 }
                 songs.add(new Song(name, arranger, elo, tags));
             } while (true);
+            locks = new Object[songs.size()];
+            for (int i = 0; i < locks.length; i++) {
+                locks[i] = new Object();
+            }
         } catch (Exception e) {
             System.err.println("Error reading csv:\n" + e.getMessage());
             e.printStackTrace();
         }
     }
     public static void main(String[] args) {
-        IO.println(System.getProperty("user.dir"));
         startup();
         Autosave a = new Autosave();
         a.start();
@@ -71,12 +76,48 @@ public class Server implements Runnable {
     public void run() {
         try (ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
              ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream())) {
-            int songOne = (int) (Math.random() * songs.size());
-            int songTwo = (int) (Math.random() * songs.size());
-            while (songOne == songTwo) {
-                songTwo = (int) (Math.random() * songs.size());
-            }
-            oos.writeObject(new Song[]{songs.get(songOne), songs.get(songTwo)});
+            do {
+                int songOne = (int) (Math.random() * songs.size());
+                int songTwo = (int) (Math.random() * songs.size());
+                while (songOne == songTwo) {
+                    songTwo = (int) (Math.random() * songs.size());
+                }
+                oos.writeObject(new Song[]{songs.get(songOne), songs.get(songTwo)});
+                int choice = ois.readInt();
+                if (choice == 1) {
+                    int lockIndexOne = (songOne < songTwo) ? songOne : songTwo;
+                    int lockIndexTwo = (songOne < songTwo) ? songTwo : songOne;
+                    synchronized (locks[lockIndexOne]) {
+                        synchronized (locks[lockIndexTwo]) {
+                            Elo.updateElo(songs.get(songOne), songs.get(songTwo));
+                        }
+                    }
+                    IO.println("Elo Updated");
+                    IO.println(songs.get(songOne).getName() + ": " + songs.get(songOne).getEloScore());
+                    IO.println(songs.get(songTwo).getName() + ": " + songs.get(songTwo).getEloScore());
+                    changesMade = true;
+                    oos.reset();
+                } else if (choice == 2) {
+                    int lockIndexOne = (songOne < songTwo) ? songOne : songTwo;
+                    int lockIndexTwo = (songOne < songTwo) ? songTwo : songOne;
+                    synchronized (locks[lockIndexOne]) {
+                        synchronized (locks[lockIndexTwo]) {
+                            Elo.updateElo(songs.get(songTwo), songs.get(songOne));
+                        }
+                    }
+                    IO.println("Elo Updated");
+                    IO.println(songs.get(songOne).getName() + ": " + songs.get(songOne).getEloScore());
+                    IO.println(songs.get(songTwo).getName() + ": " + songs.get(songTwo).getEloScore());
+                    changesMade = true;
+                    oos.reset();
+                } else if (choice == 3) {
+                    continue;
+                } else {
+                    break;
+                }
+            } while (true);
+        } catch (SocketException e) {
+            System.err.println("Connection with client ended.");
         } catch (Exception e) {
             e.printStackTrace();
         }

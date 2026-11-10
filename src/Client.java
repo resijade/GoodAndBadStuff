@@ -1,6 +1,7 @@
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class Client {
     public static void main(String[] args) {
@@ -27,9 +28,17 @@ public class Client {
                         } catch (Exception e) {
                             IO.println("Invalid option.");
                         }
+                        oos.writeInt(choice);
+                        oos.flush();
+                        if (choice == 4) {
+                            done = true;
+                            break;
+                        }
                     } while ((choice < 1) || (choice > 4));
                 }
             }
+        } catch (SocketException e) {
+            System.err.println("Connection with server ended.");
         } catch (Exception e) {
             e.printStackTrace();
         }

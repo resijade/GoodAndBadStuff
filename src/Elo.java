@@ -16,4 +16,13 @@ public class Elo implements Serializable {
     public void set(int elo) {
         this.score = elo;
     }
+
+    public static void updateElo(Song winner, Song loser) {
+        double winnerProb = 1 / (1 + Math.pow(EXPONENT_BASE, (double) (loser.getEloScore() - winner.getEloScore()) / SCALE_FACTOR));
+        double loserProb = 1 / (1 + Math.pow(EXPONENT_BASE, (double) (winner.getEloScore() - loser.getEloScore()) / SCALE_FACTOR));
+        IO.println(winner.getName() + " probability: " + winnerProb);
+        IO.println(loser.getName() + " probability: " + loserProb);
+        winner.setElo((int) (winner.getEloScore() + K_FACTOR * (1 - winnerProb)));
+        loser.setElo((int) (loser.getEloScore() + K_FACTOR * (0 - loserProb)));
+    }
 }
