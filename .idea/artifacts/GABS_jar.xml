@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="GABS:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/GABS_jar</output-path>
+    <root id="archive" name="GABS.jar">
+      <element id="module-output" name="GABS" />
+    </root>
+  </artifact>
+</component>
