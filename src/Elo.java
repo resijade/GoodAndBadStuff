@@ -22,7 +22,7 @@ public class Elo implements Serializable {
         double loserProb = 1 / (1 + Math.pow(EXPONENT_BASE, (double) (winner.getEloScore() - loser.getEloScore()) / SCALE_FACTOR));
         IO.println(winner.getName() + " probability: " + winnerProb);
         IO.println(loser.getName() + " probability: " + loserProb);
-        winner.setElo((int) (winner.getEloScore() + K_FACTOR * (1 - winnerProb)));
+        winner.setElo((int) Math.round(winner.getEloScore() + K_FACTOR * (1 - winnerProb)));
         loser.setElo((int) (loser.getEloScore() + K_FACTOR * (0 - loserProb)));
     }
 }
